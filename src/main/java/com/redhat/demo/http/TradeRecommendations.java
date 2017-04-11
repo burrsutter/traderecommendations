@@ -13,6 +13,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import io.vertx.core.shareddata.LocalMap;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
 public class TradeRecommendations extends AbstractVerticle {
@@ -79,13 +82,14 @@ public class TradeRecommendations extends AbstractVerticle {
         int min = 0;
         List<String> options = Arrays.asList(
             "BABO",
-            // "TODD",
-            // "ACME",
-            // "FALK",
-            // "PETE",
-            // "BURR",
-            // "JIM",
-            // "RTH",
+            "TODD",
+            "ACME",
+            "FALK",
+            "PETE",
+            "BURR",
+            "JIM",
+            "OCRL",
+            "RTH",
             "IMB"
         );
         int index  = java.util.concurrent.ThreadLocalRandom.current().nextInt(min, options.size());
@@ -102,23 +106,42 @@ public class TradeRecommendations extends AbstractVerticle {
     }
 
     private double determineTargetPrice(String ticker) {        
-        LocalMap<String, Double> previousMap = engineData.getLocalMap("previousMap");
-        Double oldPrice = previousMap.get(ticker);
-        if (oldPrice == null) {
-            // oldPrice = 10.85;            
-            double random = java.util.concurrent.ThreadLocalRandom.current().nextDouble(10.85,345.24);
-            oldPrice = new Double(random);
-        }
-        DecimalFormat df2 = new DecimalFormat("###.##");
-        double increment = java.util.concurrent.ThreadLocalRandom.current().nextDouble(10.85,24.12);
-        Double newPrice = oldPrice + increment;
-        Double twoDecimalPlaces = new Double(df2.format(newPrice));
-        System.out.println("HERE " + twoDecimalPlaces);
+         LocalMap<String, Double> previousMap = engineData.getLocalMap("previousMap");
+         Double oldPrice = previousMap.get(ticker);
+         if (oldPrice == null) {
+             // oldPrice = 10.85;            
+             double random = java.util.concurrent.ThreadLocalRandom.current().nextDouble(10.85,345.24);
+             oldPrice = new Double(random);
+         }
+         DecimalFormat df2 = new DecimalFormat("###.##");
+         double increment = java.util.concurrent.ThreadLocalRandom.current().nextDouble(10.85,24.12);
+         Double newPrice = oldPrice + increment;
+         Double twoDecimalPlaces = new Double(df2.format(newPrice));
+         System.out.println("new price " + twoDecimalPlaces);
         
-        previousMap.put(ticker, twoDecimalPlaces);
+         previousMap.put(ticker, twoDecimalPlaces);
 
-        return twoDecimalPlaces.doubleValue();
+         return twoDecimalPlaces.doubleValue();
     }
+
+   /* results in a runtime error
+   Invalid type for shareddata data structure: java.math.BigDecimal
+
+   private double determineTargetPrice(String ticker) {        
+       LocalMap<String, BigDecimal> previousMap = engineData.getLocalMap("previousMap");
+       BigDecimal oldPrice = previousMap.get(ticker);
+       if (oldPrice == null) {
+           double random = java.util.concurrent.ThreadLocalRandom.current().nextDouble(10.85,345.24);
+           oldPrice = BigDecimal.valueOf(random);
+       }
+       double increment = java.util.concurrent.ThreadLocalRandom.current().nextDouble(10.85,24.12);
+       BigDecimal newPrice = oldPrice.add(BigDecimal.valueOf(increment));
+       BigDecimal twoDecimalPrice = newPrice.setScale(2, RoundingMode.HALF_UP);
+       System.out.println("newPrice: " + twoDecimalPrice);
+       previousMap.put(ticker, twoDecimalPrice);
+       return newPrice.doubleValue();
+   }
+*/
 
     private int determineConfidenceScore() {
         return java.util.concurrent.ThreadLocalRandom.current().nextInt(5, 10);        
