@@ -1,4 +1,4 @@
-package io.openshift.booster;
+package com.redhat.demo;
 
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
@@ -9,6 +9,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.redhat.demo.http.TradeRecommendations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,7 +24,7 @@ public class HttpApplicationTest {
     public void before(TestContext context) {
         vertx = Vertx.vertx();
         vertx.exceptionHandler(context.exceptionHandler());
-        vertx.deployVerticle(HttpApplication.class.getName(), context.asyncAssertSuccess());
+        vertx.deployVerticle(TradeRecommendations.class.getName(), context.asyncAssertSuccess());
         client = WebClient.create(vertx);
     }
 
@@ -32,30 +34,16 @@ public class HttpApplicationTest {
     }
 
     @Test
-    public void callGreetingTest(TestContext context) {
+    public void callRecommendationTest(TestContext context) {
         // Send a request and get a response
         Async async = context.async();
-        client.get(8080, "localhost", "/api/greeting")
+        client.get(8080, "localhost", "/")
             .send(resp -> {
                 assertThat(resp.succeeded()).isTrue();
                 assertThat(resp.result().statusCode()).isEqualTo(200);
-                String content = resp.result().bodyAsJsonObject().getString("content");
-                assertThat(content).isEqualTo("Hello, World!");
+                String order = resp.result().bodyAsJsonObject().getString("order");
+                assertThat(order).startsWith("BUY");
                 async.complete();
-            });
-    }
-
-    @Test
-    public void callGreetingWithParamTest(TestContext context) {
-        // Send a request and get a response
-        Async async = context.async();
-        client.get(8080, "localhost", "/api/greeting?name=Charles")
-            .send(resp -> {
-                    assertThat(resp.succeeded()).isTrue();
-                    assertThat(resp.result().statusCode()).isEqualTo(200);
-                    String content = resp.result().bodyAsJsonObject().getString("content");
-                    assertThat(content).isEqualTo("Hello, Charles!");
-                    async.complete();
             });
     }
 
